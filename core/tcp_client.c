@@ -6,6 +6,8 @@ char buffer[1024];
 int clientSocket;
 struct sockaddr_in severAddr;
 
+
+//meant to be called as a part of a new thread. Requires the passing of socket data struct from header file.
 void run_socket(tcp_sock_data* ts_d)
 {
 	sock_d = ts_d; //copy over the pointer.
@@ -27,8 +29,24 @@ void run_socket(tcp_sock_data* ts_d)
 		while(stop == 0)
 		{
 			//communicate with server
+			int n = write(clientSocket, (struct sockaddr *) serverAddr, sizeof(serverAddr));
 			
+			if(n < 0) //keep track of the number of consecutive failures
+			{
+				fail++;
+			}
+			else //reset on successful write
+			{
+				fail = 0;
+			}
+			
+			if(fail >= 10) //if we have failed to write to the socket 10+ times, lets close the socket
+			{
+				stop = 1;
+			}
 		}
+		
+		close(client_socket); //close the socket after the loop is complete.
 	}
 	else
 	{
